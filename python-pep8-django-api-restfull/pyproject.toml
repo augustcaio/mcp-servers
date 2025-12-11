@@ -1,0 +1,8 @@
+[project]
+name = "python-django-expert"
+version = "0.1.0"
+dependencies = [
+    "mcp[cli]",
+    "pydantic",
+    "autopep8"  # Para formatação real
+]
