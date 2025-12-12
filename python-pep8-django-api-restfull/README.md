@@ -1,6 +1,6 @@
-# 🐍 Python Django Expert MCP Server
+# 🐍 Python Backend Expert MCP Server
 
-Um servidor MCP (Model Context Protocol) especializado em desenvolvimento Python/Django, oferecendo ferramentas para formatação PEP 8, scaffolding de apps Django e geração de APIs REST com Django REST Framework.
+Um servidor MCP (Model Context Protocol) especializado em desenvolvimento Python Backend, oferecendo ferramentas para formatação PEP 8, scaffolding de apps Django e FastAPI, e geração de APIs REST modernas.
 
 ## ✨ Funcionalidades
 
@@ -8,19 +8,19 @@ Um servidor MCP (Model Context Protocol) especializado em desenvolvimento Python
 
 | Ferramenta | Descrição |
 |------------|-----------|
-| `enforce_pep8` | Formata código Python seguindo as diretrizes da PEP 8 |
-| `scaffold_django_app` | Gera estrutura completa de um app Django moderno |
-| `generate_drf_api` | Cria Serializers, ViewSets e Routers para API REST |
+| `format_python_code` | Formata código Python seguindo estritamente as diretrizes da PEP 8 |
+| `scaffold_django_feature` | Gera estrutura Django completa: Model + Service + Selector + DRF ViewSet |
+| `generate_fastapi_route` | Gera endpoint FastAPI moderno usando APIRouter, Pydantic v2 e Injeção de Dependência |
+| `scaffold_fastapi_project` | Define estrutura de pastas padrão Sênior para FastAPI (Clean Architecture) |
 
 ### 📚 Recursos (Resources)
 
-- `docs://pep8` - Resumo das regras críticas da PEP 8
-- `docs://django` - Melhores práticas do Django 6.0+
-- `docs://drf` - Padrões do Django REST Framework
+- `docs://django` - Melhores práticas do Django (Enterprise Patterns)
+- `docs://fastapi` - Padrões modernos do FastAPI (2024+)
 
 ### 💡 Prompts
 
-- `review_python_code` - Template para revisão de código como engenheiro sênior
+- `review_code_senior` - Prompt para revisão de código que distingue entre Django e FastAPI
 
 ## 🚀 Instalação
 
@@ -83,7 +83,7 @@ mcp run server.py
 
 ### Formatando código com PEP 8
 
-A ferramenta `enforce_pep8` recebe código Python e retorna uma versão formatada:
+A ferramenta `format_python_code` recebe código Python e retorna uma versão formatada seguindo PEP 8:
 
 ```python
 # Entrada (código com problemas)
@@ -96,17 +96,26 @@ def hello(name):
 
 ### Gerando estrutura de App Django
 
-A ferramenta `scaffold_django_app` gera:
+A ferramenta `scaffold_django_feature` gera estrutura completa:
 - `models.py` com modelos base
-- `apps.py` configurado
-- Sugestões para `services.py` e `selectors.py`
+- `services.py` para lógica de negócio
+- `selectors.py` para queries complexas
+- ViewSets DRF com permissões configuradas
 
-### Criando API REST
+### Gerando endpoint FastAPI moderno
 
-A ferramenta `generate_drf_api` gera código completo para:
-- Serializers
-- ViewSets
-- URL Routers
+A ferramenta `generate_fastapi_route` gera código completo para:
+- Schemas Pydantic v2 com `model_config`
+- Routers usando `APIRouter`
+- Injeção de dependência com `Annotated`
+- Imports corretos de SQLAlchemy
+
+### Estruturando projeto FastAPI
+
+A ferramenta `scaffold_fastapi_project` define estrutura Clean Architecture:
+- Separação de camadas (api, core, db, models, schemas)
+- Versionamento de API (v1)
+- Configuração de migrations (Alembic)
 
 ## 📁 Estrutura do Projeto
 
@@ -135,5 +144,6 @@ Este projeto está sob a licença MIT.
 - [PEP 8 - Style Guide](https://peps.python.org/pep-0008/)
 - [Django Documentation](https://docs.djangoproject.com/)
 - [Django REST Framework](https://www.django-rest-framework.org/)
+- [FastAPI Documentation](https://fastapi.tiangolo.com/)
 - [MCP Protocol](https://modelcontextprotocol.io/)
 

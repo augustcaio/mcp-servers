@@ -1,240 +1,217 @@
-from mcp.server.fastmcp import FastMCP, Context
+from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, Field
 import autopep8
-import textwrap
 
-# Inicializa o servidor FastMCP
-mcp = FastMCP("Python Django Expert")
+# Rebranding para cobrir todo o espectro Backend
+mcp = FastMCP("Python Backend Expert")
 
-# --- Constantes de Conhecimento (Baseadas nos Links) ---
-PEP8_SUMMARY = """
-CRITICAL PEP 8 RULES:
-1. Indentation: Use 4 spaces per indentation level.
-2. Line Length: Limit all lines to a maximum of 79 characters.
-3. Imports: Imports should usually be on separate lines and grouped (Standard -> Third Party -> Local).
-4. Naming: 
-   - Functions/Variables: snake_case
-   - Classes: CapWords
-   - Constants: UPPER_CASE
-5. Whitespace: Avoid extraneous whitespace.
-Ref: https://peps.python.org/pep-0008/
+# --- Bases de Conhecimento (Knowledge Base) ---
+
+PEP8_RULES = """
+PEP 8 ESSENTIALS:
+- 4 spaces indentation.
+- Snake_case for functions/variables, CapWords for classes.
+- Imports: Standard -> Third Party -> Local.
+- Max line length: 79 chars (soft), 88/100 (hard for modern teams).
 """
 
-DJANGO_6_BEST_PRACTICES = """
-DJANGO MODERN ARCHITECTURE (Targeting 6.0+ readiness):
-1. Async Views: Use async def where I/O bound.
-2. Project Structure: Decouple business logic from Views using Services/Selectors pattern.
-3. Models: Always define __str__, use appropriate field types.
-4. Settings: Split settings (base, dev, prod).
-Ref: https://docs.djangoproject.com/en/6.0/
+DJANGO_BEST_PRACTICES = """
+DJANGO ARCHITECTURE (Enterprise Patterns):
+- "Fat Models, Skinny Views" is good, but "Service Layer" is better for complexity.
+- Selectors: Place complex DB queries in `selectors.py`.
+- Services: Place business logic in `services.py`.
+- DRF: Use ModelViewSet + DefaultRouter for standard CRUD.
+- Auth: Always use Permission Classes.
 """
 
-DRF_STANDARDS = """
-REST FRAMEWORK STANDARDS:
-1. ViewSets: Prefer ModelViewSet for CRUD standardisation.
-2. Serializers: Use ModelSerializer explicitly defining 'fields'.
-3. Routers: Use DefaultRouter to auto-generate URLs.
-4. Authentication: Never expose API without Permissions classes.
-Ref: https://python-rest-framework.readthedocs.io/en/latest/
+FASTAPI_BEST_PRACTICES = """
+FASTAPI MODERN PATTERNS (2024+):
+- Project Structure: `app/api/v1/endpoints`, `app/core`, `app/schemas`.
+- Validation: Use Pydantic v2 (`model_config`, `Field`).
+- DI: Use `Annotated[Type, Depends(...)]` for cleaner signatures.
+- Routers: Never define routes in main.py; use APIRouter.
+- Sync vs Async: Use `async def` for I/O bound, `def` for CPU bound.
 """
 
-# --- Ferramentas (Tools) ---
+# --- Ferramentas Compartilhadas ---
 
 
 class CodeInput(BaseModel):
-    code: str = Field(...,
-                      description="O código Python para analisar ou formatar.")
+    code: str = Field(..., description="Código Python para análise.")
 
 
 @mcp.tool()
-def enforce_pep8(input_data: CodeInput) -> str:
-    """
-    Formata o código fornecido estritamente de acordo com a PEP 8 e analisa violações.
-    Usa autopep8 para garantir conformidade técnica.
-    """
-    raw_code = input_data.code
+def format_python_code(input_data: CodeInput) -> str:
+    """Formata código Python seguindo estritamente a PEP 8."""
+    formatted = autopep8.fix_code(input_data.code, options={'aggressive': 1})
+    return f"✅ Código Formatado (PEP 8):\n\n{formatted}"
 
-    # Formatação automática
-    formatted_code = autopep8.fix_code(
-        raw_code,
-        options={'aggressive': 1}
-    )
-
-    report = "✅ PEP 8 COMPLIANCE REPORT:\n"
-    if raw_code != formatted_code:
-        report += "⚠️ O código original violava normas da PEP 8. Abaixo está a versão corrigida.\n\n"
-        report += "Correções aplicadas: Espaçamento, indentação e quebras de linha.\n"
-    else:
-        report += "🎉 O código já estava em conformidade com a PEP 8.\n"
-
-    return f"{report}\n--- CODE START ---\n{formatted_code}\n--- CODE END ---"
+# --- Ferramentas Django (Legado Mantido & Melhorado) ---
 
 
-class DjangoScaffoldInput(BaseModel):
-    app_name: str = Field(..., description="Nome do aplicativo Django.")
-    models_list: list[str] = Field(...,
-                                   description="Lista de nomes de modelos a serem criados.")
+class DjangoAppInput(BaseModel):
+    app_name: str
+    models: list[str]
 
 
 @mcp.tool()
-def scaffold_django_app(input_data: DjangoScaffoldInput) -> str:
-    """
-    Gera a estrutura de arquivos para um App Django moderno e robusto.
-    Segue a filosofia de 'Fat Models, Skinny Views' ou Service Layer.
-    """
+def scaffold_django_feature(input_data: DjangoAppInput) -> str:
+    """Gera estrutura Django completa: Model + Service + Selector + DRF ViewSet."""
     app = input_data.app_name
 
-    # Template para models.py
-    models_code = "from django.db import models\n\n"
-    for model in input_data.models_list:
-        models_code += f"""class {model}(models.Model):
-    # TODO: Define fields for {model}
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
-
-    class Meta:
-        ordering = ['-created_at']
-
-    def __str__(self):
-        return f"{model} object ({{self.id}})"
-
-"""
-
-    # Template para apps.py (Configuração moderna)
-    apps_code = f"""from django.apps import AppConfig
-
-class {app.capitalize()}Config(AppConfig):
-    default_auto_field = 'django.db.models.BigAutoField'
-    name = '{app}'
-"""
-
     return f"""
-    📂 ESTRUTURA SUGERIDA PARA O APP '{app}':
+    🏗️ DJANGO STRUCTURE FOR '{app}':
     
-    1. {app}/apps.py:
-    {apps_code}
+    # 1. models.py
+    from django.db import models
+    class {input_data.models[0]}(models.Model):
+        ...
     
-    2. {app}/models.py:
-    {models_code}
-    
-    3. {app}/services.py (Recomendação Senior):
-    # Coloque a lógica de negócios complexa aqui, não nas Views.
-    
-    4. {app}/selectors.py (Recomendação Senior):
-    # Coloque queries complexas aqui.
+    # 2. services.py (Business Logic)
+    def create_{input_data.models[0].lower()}(*, data):
+        # Implementation here
+        pass
+
+    # 3. views.py (DRF)
+    from rest_framework import viewsets
+    class {input_data.models[0]}ViewSet(viewsets.ModelViewSet):
+        permission_classes = [IsAuthenticated]
+        ...
     """
 
+# --- NOVAS Ferramentas FastAPI ---
 
-class DRFGeneratorInput(BaseModel):
-    model_name: str = Field(...,
-                            description="Nome do modelo Django existente.")
-    fields: list[str] = Field(default=["'__all__'"],
-                              description="Lista de campos para serializar.")
+
+class FastApiEndpointInput(BaseModel):
+    resource_name: str = Field(...,
+                               description="Nome do recurso (ex: Item, User).")
+    http_method: str = Field(..., description="GET, POST, PUT, DELETE")
 
 
 @mcp.tool()
-def generate_drf_api(input_data: DRFGeneratorInput) -> str:
+def generate_fastapi_route(input_data: FastApiEndpointInput) -> str:
     """
-    Gera código para Serializers, ViewSets e Routers seguindo as melhores práticas do DRF.
-    Cria uma API RESTful completa para um modelo.
+    Gera um endpoint FastAPI moderno usando APIRouter, Pydantic v2 e Injeção de Dependência.
     """
-    model = input_data.model_name
-    fields_str = ", ".join(input_data.fields) if len(
-        input_data.fields) > 1 else "'__all__'"
+    resource = input_data.resource_name
+    resource_lower = resource.lower()
+    method = input_data.http_method.upper()
 
-    # Serializer
-    serializer_code = f"""
-from rest_framework import serializers
-from .models import {model}
+    # Schema Pydantic v2
+    schema_code = f"""
+from pydantic import BaseModel, Field, ConfigDict
 
-class {model}Serializer(serializers.ModelSerializer):
-    class Meta:
-        model = {model}
-        fields = [{fields_str}]
-        read_only_fields = ['created_at', 'updated_at']
+class {resource}Schema(BaseModel):
+    id: int
+    name: str = Field(..., min_length=3)
+    
+    model_config = ConfigDict(from_attributes=True)
 """
 
-    # ViewSet
-    viewset_code = f"""
-from rest_framework import viewsets, permissions
-from .models import {model}
-from .serializers import {model}Serializer
-
-class {model}ViewSet(viewsets.ModelViewSet):
-    \"\"\"
-    API endpoint that allows {model} to be viewed or edited.
-    \"\"\"
-    queryset = {model}.objects.all()
-    serializer_class = {model}Serializer
-    permission_classes = [permissions.IsAuthenticated] # Security First
-"""
-
-    # Router
+    # Router Code com Annotated (Python 3.10+)
+    # Construir o decorator dinamicamente
+    decorator_method = method.lower()
+    decorator_line = f"@router.{decorator_method}(\"/\", response_model={resource}Schema)"
     router_code = f"""
-from rest_framework.routers import DefaultRouter
-from .views import {model}ViewSet
+from fastapi import APIRouter, Depends, HTTPException, status
+from typing import Annotated
+from sqlalchemy.orm import Session
+from .schemas import {resource}Schema
+from ..db.session import get_db
 
-router = DefaultRouter()
-router.register(r'{model.lower()}s', {model}ViewSet, basename='{model.lower()}')
+router = APIRouter(prefix="/{resource_lower}s", tags=["{resource}"])
 
-urlpatterns = router.urls
+{decorator_line}
+async def {decorator_method}_{resource_lower}(
+    payload: {resource}Schema,
+    db: Annotated[Session, Depends(get_db)]
+):
+    \"\"\"
+    {method} operation for {resource}.
+    Uses Dependency Injection for Database session.
+    \"\"\"
+    # Call service layer here
+    return payload
 """
 
     return f"""
-    🚀 DRF SCAFFOLDING FOR {model}:
+    🚀 FASTAPI MODERN COMPONENT ({resource}):
     
-    📄 serializers.py:
-    {serializer_code}
+    📄 schemas.py (Pydantic v2):
+    {schema_code}
     
-    📄 views.py:
-    {viewset_code}
-    
-    📄 urls.py:
+    📄 router.py (Endpoints):
     {router_code}
+    
+    💡 Dica Sênior: Lembre-se de registrar este router no main.py usando `app.include_router(router)`.
     """
 
-# --- Prompts (Templates de Comportamento) ---
+
+class FastApiStructureInput(BaseModel):
+    project_name: str
+
+
+@mcp.tool()
+def scaffold_fastapi_project(input_data: FastApiStructureInput) -> str:
+    """Define a estrutura de pastas padrão Sênior para FastAPI."""
+    name = input_data.project_name
+    return f"""
+    📂 ESTRUTURA RECOMENDADA (Clean Architecture para FastAPI):
+    
+    {name}/
+    ├── app/
+    │   ├── api/
+    │   │   ├── v1/
+    │   │   │   ├── endpoints/  <-- Seus routers ficam aqui
+    │   │   │   └── api.py      <-- Agrupa routers
+    │   │   └── deps.py         <-- Dependências Reutilizáveis (Auth, DB)
+    │   ├── core/
+    │   │   ├── config.py       <-- Pydantic Settings
+    │   │   └── security.py
+    │   ├── db/
+    │   │   └── session.py      <-- SQLAlchemy/Tortoise setup
+    │   ├── models/             <-- Modelos de Banco (ORM)
+    │   ├── schemas/            <-- Modelos Pydantic (Input/Output)
+    │   └── main.py             <-- Entrypoint limpo
+    ├── alembic/                <-- Migrations
+    ├── pyproject.toml
+    └── Dockerfile
+    """
+
+# --- Prompts ---
 
 
 @mcp.prompt()
-def review_python_code(code: str) -> str:
-    """Retorna um prompt de sistema para que o LLM atue como um revisor de código sênior."""
+def review_code_senior(code: str) -> str:
+    """Prompt para revisão de código que distingue entre Django e FastAPI."""
     return f"""
-    Você é um Engenheiro de Software Python Sênior. Sua tarefa é revisar o seguinte código.
+    Atue como um Tech Lead Python (Sênior). Revise o código abaixo.
     
-    Diretrizes Estritas:
-    1. Verifique a conformidade com a PEP 8 ({PEP8_SUMMARY}).
-    2. Verifique se o código Django segue as práticas modernas da versão 6.0 (ex: async onde possível, types hinting).
-    3. Verifique se as APIs REST seguem a arquitetura do DRF (ViewSets, Routers).
+    1. Identifique o Framework (Django ou FastAPI ou Puro).
+    2. Se **Django**: Verifique se há lógica nas Views (ruim) ou Services (bom). Verifique padrões DRF.
+    3. Se **FastAPI**: 
+       - Procure por `Annotated` (Python moderno).
+       - Verifique se Pydantic v2 está sendo usado (`model_config`).
+       - Garanta que `async` está sendo usado corretamente (não bloqueante).
+    4. Se **Geral**: Aplique PEP 8 rigorosa.
     
-    Código para revisão:
+    Código:
     ```python
     {code}
     ```
-    
-    Por favor, liste:
-    - Erros de estilo (Linter).
-    - Riscos de segurança.
-    - Otimizações de desempenho.
-    - Código refatorado sugerido.
     """
 
-# --- Recursos (Resources) ---
+# --- Resources ---
 
 
-@mcp.resource("docs://pep8")
-def get_pep8_docs() -> str:
-    return PEP8_SUMMARY
+@mcp.resource("docs://fastapi")
+def get_fastapi_guide() -> str:
+    return FASTAPI_BEST_PRACTICES
 
 
 @mcp.resource("docs://django")
-def get_django_docs() -> str:
-    return DJANGO_6_BEST_PRACTICES
-
-
-@mcp.resource("docs://drf")
-def get_drf_docs() -> str:
-    return DRF_STANDARDS
+def get_django_guide() -> str:
+    return DJANGO_BEST_PRACTICES
 
 
 if __name__ == "__main__":
