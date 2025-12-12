@@ -7,6 +7,7 @@ Coleção de servidores MCP (Model Context Protocol) desenvolvidos para estender
 | Servidor | Descrição | Status |
 |----------|-----------|--------|
 | [python-pep8-django-api-restfull](./python-pep8-django-api-restfull/) | Ferramentas para PEP 8, Django e Django REST Framework | ✅ Ativo |
+| [git-conventional-expert](./git-conventional-expert/) | Validação e construção de commits seguindo Conventional Commits v1.0.0 | ✅ Ativo |
 
 ## 🚀 Como Usar
 
@@ -39,8 +40,12 @@ Adicione os servidores desejados ao arquivo `~/.cursor/mcp.json`:
 mcp-servers/
 ├── README.md                              # Este arquivo
 ├── .gitignore                             # Arquivos ignorados
-└── python-pep8-django-api-restfull/       # Servidor Python/Django
-    ├── server.py
+├── python-pep8-django-api-restfull/       # Servidor Python/Django
+│   ├── server.py
+│   ├── pyproject.toml
+│   └── README.md
+└── git-conventional-expert/                # Servidor Git Conventional Commits
+    ├── git_expert.py
     ├── pyproject.toml
     └── README.md
 ```
