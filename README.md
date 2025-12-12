@@ -4,10 +4,10 @@ Coleção de servidores MCP (Model Context Protocol) desenvolvidos para estender
 
 ## 📦 Servidores Disponíveis
 
-| Servidor | Descrição | Status |
-|----------|-----------|--------|
-| [python-pep8-django-api-restfull](./python-pep8-django-api-restfull/) | Ferramentas para PEP 8, Django e Django REST Framework | ✅ Ativo |
-| [git-conventional-expert](./git-conventional-expert/) | Validação e construção de commits seguindo Conventional Commits v1.0.0 | ✅ Ativo |
+| Servidor                                                              | Descrição                                                              | Status   |
+| --------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------- |
+| [python-pep8-django-api-restfull](./python-pep8-django-api-restfull/) | Ferramentas para PEP 8, Django e Django REST Framework                 | ✅ Ativo |
+| [git-conventional-expert](./git-conventional-expert/)                 | Validação e construção de commits seguindo Conventional Commits v1.0.0 | ✅ Ativo |
 
 ## 🚀 Como Usar
 
@@ -69,4 +69,3 @@ MIT License
 ---
 
 ⭐ Se este repositório foi útil, considere dar uma estrela!
-
