@@ -6,11 +6,11 @@ Um servidor MCP (Model Context Protocol) especializado no **C4 Model** (Simon Br
 
 ### 🔧 Ferramentas Disponíveis
 
-| Ferramenta | Descrição |
-|------------|-----------|
-| `generate_mermaid_c4` | Gera código Mermaid.js compatível com diagramas C4 (Context, Container, Component) |
-| `generate_structurizr_dsl` | Gera workspace completo em Structurizr DSL para versionamento "Diagrams as Code" |
-| `validate_c4_hierarchy` | Valida se a estrutura respeita as regras de abstração do C4 Model |
+| Ferramenta                 | Descrição                                                                          |
+| -------------------------- | ---------------------------------------------------------------------------------- |
+| `generate_mermaid_c4`      | Gera código Mermaid.js compatível com diagramas C4 (Context, Container, Component) |
+| `generate_structurizr_dsl` | Gera workspace completo em Structurizr DSL para versionamento "Diagrams as Code"   |
+| `validate_c4_hierarchy`    | Valida se a estrutura respeita as regras de abstração do C4 Model                  |
 
 ### 📚 Recursos (Resources)
 
@@ -31,11 +31,13 @@ Um servidor MCP (Model Context Protocol) especializado no **C4 Model** (Simon Br
 ### Setup
 
 1. Clone o repositório ou navegue até a pasta:
+
 ```bash
 cd c4-architecture-expert
 ```
 
 2. Crie um ambiente virtual:
+
 ```bash
 python -m venv venv
 source venv/bin/activate  # Linux/Mac
@@ -44,6 +46,7 @@ venv\Scripts\activate  # Windows
 ```
 
 3. Instale as dependências:
+
 ```bash
 pip install -e .
 # ou
@@ -59,9 +62,7 @@ Adicione ao arquivo `~/.cursor/mcp.json`:
   "mcpServers": {
     "c4-architecture-expert": {
       "command": "/caminho/para/venv/bin/python",
-      "args": [
-        "/caminho/para/c4-architecture-expert/c4_architect.py"
-      ]
+      "args": ["/caminho/para/c4-architecture-expert/c4_architect.py"]
     }
   }
 }
@@ -70,11 +71,13 @@ Adicione ao arquivo `~/.cursor/mcp.json`:
 ## 🧪 Testando o Servidor
 
 ### Modo Desenvolvimento (Interface Web)
+
 ```bash
 mcp dev c4_architect.py
 ```
 
 ### Modo Produção (stdio)
+
 ```bash
 mcp run c4_architect.py
 ```
@@ -84,19 +87,33 @@ mcp run c4_architect.py
 ### Gerando diagrama C4 Context em Mermaid
 
 **Input:**
+
 ```json
 {
   "title": "E-Commerce System Context",
   "diagram_type": "Context",
   "elements": [
-    {"name": "Customer", "type": "Person", "description": "A customer who buys products"},
-    {"name": "E-Commerce System", "type": "System", "description": "Allows customers to buy products online"},
-    {"name": "Payment Gateway", "type": "System", "description": "External payment processing"}
+    {
+      "name": "Customer",
+      "type": "Person",
+      "description": "A customer who buys products"
+    },
+    {
+      "name": "E-Commerce System",
+      "type": "System",
+      "description": "Allows customers to buy products online"
+    },
+    {
+      "name": "Payment Gateway",
+      "type": "System",
+      "description": "External payment processing"
+    }
   ]
 }
 ```
 
 **Saída:**
+
 ```mermaid
 C4Context
   title E-Commerce System Context
@@ -112,11 +129,16 @@ C4Context
 ### Validando hierarquia C4
 
 **Input:**
+
 ```json
 {
   "hierarchy": {
     "E-Commerce System": {
-      "Web Application": ["ProductController", "CartService", "OrderRepository"],
+      "Web Application": [
+        "ProductController",
+        "CartService",
+        "OrderRepository"
+      ],
       "API Gateway": ["AuthMiddleware", "RateLimiter"]
     }
   }
@@ -124,6 +146,7 @@ C4Context
 ```
 
 **Saída:**
+
 ```
 ✅ Estrutura C4 Válida! A hierarquia System -> Container -> Component está correta.
 ```
@@ -147,12 +170,15 @@ c4-architecture-expert/
 ## 🧠 Benefícios
 
 ### Diagramas como Código
+
 Gere diagramas versionáveis em Mermaid ou Structurizr DSL, permitindo controle de versão e automação.
 
 ### Validação Automática
+
 O validador `validate_c4_hierarchy` garante que sua arquitetura respeita as regras de abstração do C4.
 
 ### Integração com IA
+
 O prompt `design_system_architecture` permite que assistentes de IA atuem como arquitetos C4 experientes.
 
 ## 🤝 Contribuindo
@@ -173,4 +199,3 @@ Este projeto está sob a licença MIT.
 - [Structurizr](https://structurizr.com/)
 - [Mermaid C4 Diagrams](https://mermaid.js.org/syntax/c4.html)
 - [MCP Protocol](https://modelcontextprotocol.io/)
-
