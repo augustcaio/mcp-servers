@@ -1,0 +1,22 @@
+{
+  "mcpServers": {
+    "git-conventional-expert": {
+      "command": "c:\\Users\\caioa\\Desktop\\Projetos\\mcp-servers\\.venv\\Scripts\\python.exe",
+      "args": [
+        "c:\\Users\\caioa\\Desktop\\Projetos\\mcp-servers\\git-conventional-expert\\git_expert.py"
+      ]
+    },
+    "python-pep8-django-api-restfull": {
+      "command": "c:\\Users\\caioa\\Desktop\\Projetos\\mcp-servers\\.venv\\Scripts\\python.exe",
+      "args": [
+        "c:\\Users\\caioa\\Desktop\\Projetos\\mcp-servers\\python-pep8-django-api-restfull\\server.py"
+      ]
+    },
+    "c4-architecture-expert": {
+      "command": "c:\\Users\\caioa\\Desktop\\Projetos\\mcp-servers\\.venv\\Scripts\\python.exe",
+      "args": [
+        "c:\\Users\\caioa\\Desktop\\Projetos\\mcp-servers\\c4-architecture-expert\\c4_architect.py"
+      ]
+    }
+  }
+}

@@ -1,0 +1,10 @@
+[project]
+name = "c4-architecture-expert"
+version = "0.1.0"
+description = "MCP Server especializado em C4 Model Architecture (Simon Brown)"
+dependencies = [
+    "mcp[cli]",
+    "pydantic"
+]
+
+
