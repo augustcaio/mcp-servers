@@ -2,287 +2,218 @@ from mcp.server.fastmcp import FastMCP
 from pydantic import BaseModel, Field
 from typing import List, Optional, Literal
 
-mcp = FastMCP("C4 Architecture Architect (Styled)")
+mcp = FastMCP("C4 Ultimate Architect")
 
-# --- Knowledge Base & Templates ---
+# --- Knowledge Base & Styles ---
 
 THEMES = {
-    "Standard": {
-        "Person": "#08427b",
-        "System": "#1168bd",
-        "Container": "#438dd5",
-        "Database": "#2fa4e7",
-        "External": "#999999",
-        "Text": "#ffffff"
-    },
-    "Forest": {
-        "Person": "#1b5e20",
-        "System": "#2e7d32",
-        "Container": "#4caf50",
-        "Database": "#81c784",
-        "External": "#757575",
-        "Text": "#ffffff"
-    },
-    "PurpleRain": {
-        "Person": "#4a148c",
-        "System": "#7b1fa2",
-        "Container": "#9c27b0",
-        "Database": "#ba68c8",
-        "External": "#616161",
-        "Text": "#ffffff"
-    }
+    "Standard": {"Person": "#08427b", "System": "#1168bd", "Container": "#438dd5", "Component": "#85bbf0", "Node": "#ffffff"},
+    "Dark": {"Person": "#1e88e5", "System": "#1565c0", "Container": "#42a5f5", "Component": "#90caf9", "Node": "#424242"}
 }
 
-# --- Models ---
+DOCS_C4_FULL = """
+C4 MODEL FULL SPECIFICATION:
+1. Context: Big picture (System + Users).
+2. Container: Deployable units (API, DB, SPA).
+3. Component: Internal building blocks (Controllers, Services).
+4. Code: Class diagrams (UML).
++ Deployment: Mapping Containers to Infrastructure Nodes (AWS, Docker).
++ Dynamic: Runtime communication steps for a specific feature.
+"""
+
+# --- Models Unificados ---
 
 
 class C4Element(BaseModel):
+    id: str = Field(...,
+                    description="Identificador único (sem espaços, ex: 'web_app').")
     name: str
-    type: Literal["Person", "System", "System_Ext",
-                  "Container", "ContainerDb", "Component"]
+    type: Literal[
+        "Person", "System", "System_Ext",
+        "Container", "ContainerDb",
+        "Component",
+        "DeploymentNode", "InfrastructureNode"
+    ]
     description: str
     technology: Optional[str] = None
-    parent: Optional[str] = Field(None, description="Nome do elemento pai.")
+    parent_id: Optional[str] = Field(
+        None, description="ID do elemento pai (ex: Componente pertence a Container).")
+
+
+class Relationship(BaseModel):
+    source_id: str
+    target_id: str
+    label: str
+    technology: Optional[str] = None
+    order: Optional[str] = Field(
+        None, description="Para diagramas dinâmicos: '1', '2', '2.1'")
 
 
 class StyleOptions(BaseModel):
-    theme: Literal["Standard", "Forest", "PurpleRain"] = "Standard"
-    shape_person: Literal["Person", "Robot"] = "Person"
+    theme: Literal["Standard", "Dark"] = "Standard"
+
+# --- Tool 1: Gerador de Diagramas Estruturais (Context, Container, Component, Deployment) ---
 
 
-class MermaidInput(BaseModel):
+class StructuralDiagramInput(BaseModel):
+    title: str
+    view_type: Literal["Context", "Container", "Component", "Deployment"]
+    elements: List[C4Element]
+    relationships: List[Relationship] = []
+    styling: StyleOptions = Field(default_factory=StyleOptions)
+
+
+@mcp.tool()
+def generate_c4_structural(input_data: StructuralDiagramInput) -> str:
+    """
+    Gera diagramas C4 estruturais (Níveis 1, 2, 3 e Implantação) usando Mermaid.js.
+    Suporta aninhamento profundo (Boundary) para Components e Deployment Nodes.
+    """
+    t = input_data.view_type
+
+    # Header Mapping
+    if t == "Context": header = "C4Context"
+    elif t == "Container": header = "C4Container"
+    elif t == "Component": header = "C4Component"
+    # Mermaid usa C4Context base com Nodes
+    elif t == "Deployment": header = "C4Context"
+    else: header = "C4Context"
+
+    mermaid_code = f"```mermaid\n{header}\n  title {input_data.title}\n"
+
+    # Mapeamento de Elementos por ID para facilitar hierarquia
+    elements_map = {e.id: e for e in input_data.elements}
+    children_map = {e.id: [] for e in input_data.elements}
+    roots = []
+
+    # Construir árvore
+    for e in input_data.elements:
+        if e.parent_id and e.parent_id in elements_map:
+            children_map[e.parent_id].append(e)
+        else:
+            roots.append(e)
+
+    # Função recursiva para desenhar (necessária para Componentes dentro de Containers dentro de Sistemas)
+    def draw_node(element):
+        code = ""
+        children = children_map.get(element.id, [])
+
+        # Definição de macros Mermaid
+        tech = f', "{element.technology}"' if element.technology else ""
+
+        # Se tem filhos, é um Boundary (Subgrafo)
+        if children:
+            boundary_type = "System_Boundary"
+            if element.type == "Container": boundary_type = "Container_Boundary"
+            if element.type == "DeploymentNode": boundary_type = "Node"
+
+            code += f'  {boundary_type}({element.id}, "{element.name}") {{\n'
+            for child in children:
+                code += draw_node(child)
+            code += "  }\n"
+        else:
+            # Elemento Folha
+            macro_map = {
+                "Person": "Person", "System": "System", "System_Ext": "System_Ext",
+                "Container": "Container", "ContainerDb": "ContainerDb",
+                "Component": "Component",
+                "DeploymentNode": "Node", "InfrastructureNode": "Node"  # Fallback
+            }
+            macro = macro_map.get(element.type, "System")
+            code += f'  {macro}({element.id}, "{element.name}", "{element.description}"{tech})\n'
+
+        return code
+
+    # Renderizar Elementos
+    for root in roots:
+        mermaid_code += draw_node(root)
+
+    # Renderizar Relacionamentos
+    for rel in input_data.relationships:
+        tech_rel = f', "{rel.technology}"' if rel.technology else ""
+        mermaid_code += f'  Rel({rel.source_id}, {rel.target_id}, "{rel.label}"{tech_rel})\n'
+
+    # Estilização básica
+    mermaid_code += _apply_theme(input_data.styling.theme)
+    mermaid_code += "\n```"
+    return mermaid_code
+
+# --- Tool 2: Diagrama Dinâmico (Fluxos) ---
+
+
+class DynamicDiagramInput(BaseModel):
     title: str
     elements: List[C4Element]
-    diagram_type: Literal["Context", "Container", "Component"] = "Context"
-    styling: StyleOptions = Field(default_factory=StyleOptions)
-
-# --- Helpers de Estilização ---
-
-
-def _get_mermaid_styling(theme_name: str, diagram_type: str) -> str:
-    """Gera diretivas de estilo do Mermaid C4 baseadas no tema."""
-    t = THEMES[theme_name]
-
-    # Mermaid C4 usa UpdateElementStyle(element_name, $bgColor, $fontColor, $borderColor, $shadowing)
-    # Como não sabemos os IDs dinâmicos aqui, aplicaremos estilos globais via UpdateSkinParams ou
-    # definiremos estilos por tipo de elemento se a biblioteca suportar, mas o Mermaid C4
-    # funciona melhor definindo cores na declaração ou via classes.
-    # Abordagem: Retornar strings de definição de classe.
-
-    return f"""
-    %% Styling for {theme_name} Theme
-    UpdateElementStyle(person, $bgColor="{t['Person']}", $fontColor="{t['Text']}")
-    UpdateElementStyle(system, $bgColor="{t['System']}", $fontColor="{t['Text']}")
-    UpdateElementStyle(container, $bgColor="{t['Container']}", $fontColor="{t['Text']}")
-    UpdateElementStyle(component, $bgColor="{t['Container']}", $fontColor="{t['Text']}")
-    UpdateElementStyle(external_system, $bgColor="{t['External']}", $fontColor="{t['Text']}")
-    """
-
-
-def _get_structurizr_styles(theme_name: str) -> str:
-    """Gera o bloco 'styles' do Structurizr DSL."""
-    t = THEMES[theme_name]
-    return f"""
-        styles {{
-            element "Person" {{
-                background {t['Person']}
-                color {t['Text']}
-                shape Person
-            }}
-            element "Software System" {{
-                background {t['System']}
-                color {t['Text']}
-            }}
-            element "Existing System" {{
-                background {t['External']}
-                color {t['Text']}
-            }}
-            element "Container" {{
-                background {t['Container']}
-                color {t['Text']}
-            }}
-            element "Database" {{
-                shape Cylinder
-                background {t['Database']}
-            }}
-            element "Component" {{
-                background {t['Container']} # Componentes herdam cor do container, ligeiramente mais claros
-                color {t['Text']}
-            }}
-            element "WebBrowser" {{
-                shape WebBrowser
-            }}
-        }}
-    """
-
-# --- Tools ---
-
-
-@mcp.tool()
-def generate_mermaid_c4(input_data: MermaidInput) -> str:
-    """
-    Gera diagrama Mermaid C4 com estilização automática baseada no tipo de diagrama e tema.
-    Diferencia visualmente Sistemas Externos e Bancos de Dados.
-    """
-    header_map = {
-        "Context": "C4Context",
-        "Container": "C4Container",
-        "Component": "C4Component"
-    }
-
-    diagram_header = f"{header_map[input_data.diagram_type]}\n  title {input_data.title}\n"
-
-    body = ""
-
-    for el in input_data.elements:
-        safe_id = el.name.replace(" ", "_").replace("-", "_").lower()
-        tech = f', "{el.technology}"' if el.technology else ""
-
-        # Seleção Inteligente de Macros Mermaid baseada no Tipo
-        if el.type == "Person":
-            macro = "Person"
-        elif el.type == "System":
-            macro = "System"
-        elif el.type == "System_Ext":
-            macro = "System_Ext"  # Cor cinza nativa do Mermaid C4, será sobrescrita pelo tema
-        elif el.type == "ContainerDb":
-            macro = "ContainerDb"
-        elif el.type == "Container":
-            macro = "Container"
-        elif el.type == "Component":
-            macro = "Component"
-        else:
-            macro = "System"
-
-        body += f'  {macro}({safe_id}, "{el.name}", "{el.description}"{tech})\n'
-
-    # Adicionar Estilização no final
-    styling = _get_mermaid_styling(
-        input_data.styling.theme, input_data.diagram_type)
-
-    # Gerar Relacionamentos Dummy (para visualização)
-    rels = ""
-    if len(input_data.elements) > 1:
-        rels = f'  Rel({input_data.elements[0].name.replace(" ", "_").lower()}, {input_data.elements[1].name.replace(" ", "_").lower()}, "Uses")\n'
-
-    return f"```mermaid\n{diagram_header}\n{body}\n{rels}\n{styling}\n```"
-
-
-class StructurizrInput(BaseModel):
-    workspace_name: str
-    description: str
-    elements: List[C4Element]
+    steps: List[Relationship]
     styling: StyleOptions = Field(default_factory=StyleOptions)
 
 
 @mcp.tool()
-def generate_structurizr_dsl(input_data: StructurizrInput) -> str:
+def generate_c4_dynamic(input_data: DynamicDiagramInput) -> str:
     """
-    Gera workspace Structurizr DSL com tags e estilos avançados.
-    Detecta automaticamente se é Banco de Dados ou Browser para mudar a forma (Shape).
+    Gera um diagrama C4 Dinâmico.
+    Foca na sequência de interações para uma funcionalidade específica.
     """
-    dsl = f"""workspace "{input_data.workspace_name}" "{input_data.description}" {{
+    mermaid_code = f"```mermaid\nC4Dynamic\n  title {input_data.title}\n"
 
-    model {{
+    # Apenas declara os elementos envolvidos (sem hierarquia complexa visualmente)
+    for e in input_data.elements:
+        macro = "Container"  # Default para dynamic costuma ser Container ou Component
+        if e.type == "Component": macro = "Component"
+        elif e.type == "Person": macro = "Person"
+
+        tech = f', "{e.technology}"' if e.technology else ""
+        mermaid_code += f'  {macro}({e.id}, "{e.name}", "{e.technology or ""}", "{e.description}")\n'
+
+    # Relacionamentos com índices
+    for step in input_data.steps:
+        idx = f'{step.order}: ' if step.order else ""
+        mermaid_code += f'  Rel({step.source_id}, {step.target_id}, "{idx}{step.label}")\n'
+
+    mermaid_code += _apply_theme(input_data.styling.theme)
+    mermaid_code += "\n```"
+    return mermaid_code
+
+# --- Tool 3: Nível 4 - Código (Classes) ---
+
+
+class ClassDiagramInput(BaseModel):
+    title: str
+    classes_code: str = Field(...,
+                              description="Definição simplificada das classes/interfaces.")
+
+
+@mcp.tool()
+def generate_code_diagram(input_data: ClassDiagramInput) -> str:
+    """
+    Gera o Nível 4 (Code) usando Mermaid Class Diagram.
+    Embora o C4 evite isso, às vezes é necessário para detalhes de Componentes.
+    """
+    return f"""```mermaid
+classDiagram
+    note "C4 Level 4: Code Diagram for {input_data.title}"
+    {input_data.classes_code}
+```"""
+
+
+# --- Helper de Estilização ---
+
+def _apply_theme(theme_name: str) -> str:
+    """Aplica tema de cores ao diagrama Mermaid C4."""
+    t = THEMES.get(theme_name, THEMES["Standard"])
+    return f"""
+    UpdateElementStyle(person, $bgColor="{t['Person']}", $fontColor="#ffffff")
+    UpdateElementStyle(system, $bgColor="{t['System']}", $fontColor="#ffffff")
+    UpdateElementStyle(container, $bgColor="{t['Container']}", $fontColor="#ffffff")
+    UpdateElementStyle(component, $bgColor="{t['Component']}", $fontColor="#000000")
 """
-    systems_map = {}  # Map para aninhamento
 
-    # 1. Definição de Elementos
-    for el in input_data.elements:
-        safe_var = el.name.replace(" ", "")
 
-        # Tags automáticas para estilização
-        tags = ""
-        if el.type == "ContainerDb" or "database" in (el.technology or "").lower():
-            tags = "tag \"Database\""
-        elif el.type == "System_Ext":
-            tags = "tag \"Existing System\""
-        elif "browser" in (el.technology or "").lower() or "react" in (el.technology or "").lower():
-            tags = "tag \"WebBrowser\""
+# --- Resources ---
 
-        # Lógica de geração DSL
-        if el.type == "Person":
-            dsl += f'        {safe_var} = person "{el.name}" "{el.description}"\n'
-
-        elif el.type in ["System", "System_Ext"]:
-            sys_type = "softwareSystem"
-            dsl += f'        {safe_var} = {sys_type} "{el.name}" "{el.description}" {{ \n'
-            dsl += f'            {tags}\n' if tags else ""
-            # Guarda referência para containers filhos
-            systems_map[el.name] = safe_var
-            dsl += "        }\n"
-
-        elif el.type in ["Container", "ContainerDb"]:
-            # Procura o pai
-            parent_var = systems_map.get(el.parent, None)
-
-            # Se não achou pai declarado antes, cria um dummy (limitação da ordem linear)
-            # Em prod, faríamos duas passadas na lista. Aqui simplificaremos assumindo ordem correta ou injetando em string builder.
-            # Vamos assumir que o usuário/LLM manda System antes de Container.
-            if parent_var:
-                # Hack: Injetar dentro da string do sistema já criado é difícil com concatenação simples.
-                # Melhor abordagem para DSL: Definir hierarquia aninhada ou usar !ref (Structurizr avançado).
-                # Para simplificar este MCP: Vamos gerar uma estrutura plana onde containers referenciam pais?
-                # Structurizr DSL exige aninhamento no bloco model.
-                pass
-
-    # RECRIANDO A ESTRUTURA DE MODELAGEM PARA SUPORTAR ANINHAMENTO CORRETO
-    # Passada 1: Pessoas e Sistemas
-    roots = [e for e in input_data.elements if e.type in [
-        "Person", "System", "System_Ext"]]
-    children = [e for e in input_data.elements if e.type not in [
-        "Person", "System", "System_Ext"]]
-
-    for root in roots:
-        root_var = root.name.replace(" ", "")
-        is_ext = "Existing System" if root.type == "System_Ext" else ""
-
-        dsl += f'        {root_var} = softwareSystem "{root.name}" "{root.description}" {{\n'
-        if is_ext:
-            dsl += f'            tag "{is_ext}"\n'
-
-        # Passada 2: Encontrar filhos deste sistema
-        my_children = [c for c in children if c.parent == root.name]
-        for child in my_children:
-            child_var = child.name.replace(" ", "")
-            tech = child.technology if child.technology else ""
-            c_type = "container"
-
-            # Tags de filho
-            child_tags = []
-            if child.type == "ContainerDb":
-                child_tags.append("Database")
-            if "browser" in tech.lower():
-                child_tags.append("WebBrowser")
-
-            tags_str = f'tags "{", ".join(child_tags)}"' if child_tags else ""
-
-            dsl += f'            {child_var} = {c_type} "{child.name}" "{child.description}" "{tech}" {{\n'
-            dsl += f'                {tags_str}\n'
-            dsl += f'            }}\n'
-
-        dsl += "        }\n"
-
-    dsl += """    }
-
-    views {
-        systemContext """ + (roots[1].name.replace(" ", "") if len(roots) > 1 else "MySystem") + """ {
-            include *
-            autoLayout
-        }
-        
-        container """ + (roots[1].name.replace(" ", "") if len(roots) > 1 else "MySystem") + """ {
-            include *
-            autoLayout
-        }
-"""
-    # INJEÇÃO DINÂMICA DE ESTILOS
-    dsl += _get_structurizr_styles(input_data.styling.theme)
-
-    dsl += """    }
-}
-"""
-    return dsl
+@mcp.resource("docs://c4-model")
+def get_c4_docs() -> str:
+    return DOCS_C4_FULL
 
 
 if __name__ == "__main__":
