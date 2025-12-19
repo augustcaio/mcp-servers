@@ -1,0 +1,9 @@
+[project]
+name = "angular-renaissance-expert"
+version = "0.1.0"
+description = "MCP Server especializado em Angular Renaissance (v17+) com Signals, Control Flow e padrões modernos"
+dependencies = [
+    "mcp[cli]",
+    "pydantic"
+]
+
