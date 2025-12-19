@@ -4,11 +4,12 @@ Coleção de servidores MCP (Model Context Protocol) desenvolvidos para estender
 
 ## 📦 Servidores Disponíveis
 
-| Servidor                                                              | Descrição                                                              | Status   |
-| --------------------------------------------------------------------- | ---------------------------------------------------------------------- | -------- |
-| [python-pep8-django-api-restfull](./python-pep8-django-api-restfull/) | Ferramentas para PEP 8, Django e Django REST Framework                 | ✅ Ativo |
-| [git-conventional-expert](./git-conventional-expert/)                 | Validação e construção de commits seguindo Conventional Commits v1.0.0 | ✅ Ativo |
-| [c4-architecture-expert](./c4-architecture-expert/)                   | Geração de diagramas C4 Model (Mermaid, Structurizr DSL)               | ✅ Ativo |
+| Servidor                                                              | Descrição                                                               | Status   |
+| --------------------------------------------------------------------- | ----------------------------------------------------------------------- | -------- |
+| [python-pep8-django-api-restfull](./python-pep8-django-api-restfull/) | Ferramentas para PEP 8, Django e Django REST Framework                  | ✅ Ativo |
+| [git-conventional-expert](./git-conventional-expert/)                 | Validação e construção de commits seguindo Conventional Commits v1.0.0  | ✅ Ativo |
+| [c4-architecture-expert](./c4-architecture-expert/)                   | Geração de diagramas C4 Model (Mermaid, Structurizr DSL)                | ✅ Ativo |
+| [angular-renaissance-expert](./angular-renaissance-expert/)           | Angular Renaissance (v17+) com Signals, Control Flow e padrões modernos | ✅ Ativo |
 
 ## 🚀 Como Usar
 
@@ -46,13 +47,17 @@ mcp-servers/
 │   ├── server.py
 │   ├── pyproject.toml
 │   └── README.md
-├── git-conventional-expert/               # Servidor Git Conventional Commits
+├── git-conventional-expert/                # Servidor Git Conventional Commits
 │   ├── git_expert.py
 │   ├── pyproject.toml
 │   └── README.md
-└── c4-architecture-expert/                # Servidor C4 Model Architecture
-    ├── c4_architect.py
-    └── pyproject.toml
+├── c4-architecture-expert/                 # Servidor C4 Model Architecture
+│   ├── c4_architect.py
+│   └── pyproject.toml
+└── angular-renaissance-expert/             # Servidor Angular Renaissance
+    ├── angular_expert.py
+    ├── pyproject.toml
+    └── README.md
 ```
 
 ## 🤝 Contribuindo
