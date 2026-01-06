@@ -10,6 +10,7 @@ Coleção de servidores MCP (Model Context Protocol) desenvolvidos para estender
 | [git-conventional-expert](./git-conventional-expert/)                 | Validação e construção de commits seguindo Conventional Commits v1.0.0  | ✅ Ativo |
 | [c4-architecture-expert](./c4-architecture-expert/)                   | Geração de diagramas C4 Model (Mermaid, Structurizr DSL)                | ✅ Ativo |
 | [angular-renaissance-expert](./angular-renaissance-expert/)           | Angular Renaissance (v17+) com Signals, Control Flow e padrões modernos | ✅ Ativo |
+| [portainer-expert](./portainer-expert/)                               | Gerenciamento de containers Docker, stacks, volumes e networks via Portainer | ✅ Ativo |
 
 ## 🚀 Como Usar
 
@@ -56,6 +57,10 @@ mcp-servers/
 │   └── pyproject.toml
 └── angular-renaissance-expert/             # Servidor Angular Renaissance
     ├── angular_expert.py
+    ├── pyproject.toml
+    └── README.md
+└── portainer-expert/                       # Servidor Portainer
+    ├── portainer_expert.py
     ├── pyproject.toml
     └── README.md
 ```

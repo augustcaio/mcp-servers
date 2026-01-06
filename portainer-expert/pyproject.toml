@@ -1,0 +1,9 @@
+[project]
+name = "portainer-expert"
+version = "0.1.0"
+description = "MCP Server especializado em Portainer - Gerenciamento de containers Docker, Kubernetes e ambientes containerizados"
+dependencies = [
+    "mcp[cli]",
+    "pydantic",
+    "requests"
+]
